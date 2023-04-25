@@ -41,11 +41,6 @@
                 <RowDefinition Height="Auto" />
             </Grid.RowDefinitions>
 
-            <TextBlock
-                Text="Chat Window"
-                FontWeight="Bold"
-                Margin="5"/>
-
             <ListView
                 x:Name="ChatLog"
                 Grid.Row="0"

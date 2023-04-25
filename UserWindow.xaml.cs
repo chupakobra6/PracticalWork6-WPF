@@ -1,9 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
+using System.Windows.Controls;
 
 namespace PracticalWork6
 {
@@ -12,74 +14,60 @@ namespace PracticalWork6
     /// </summary>
     public partial class UserWindow : Window
     {
-        private TcpClient _tcpClient;
-        private CancellationTokenSource _cancellationTokenSource;
+        string ip;
+        int port;
+        string username;
+        TcpClient _tcpClient;
 
         public UserWindow(string ip, int port, string username)
         {
             InitializeComponent();
+            this.ip = ip;
+            this.port = port;
+            this.username = username;
 
-            ip = "26.97.200.149"; // !
 
-            InitializeAsync(ip, port, username);
+            InitializeClient();
         }
 
-        private async Task InitializeAsync(string ip, int port, string username)
+        private async Task InitializeClient()
         {
             _tcpClient = new TcpClient(ip, port, username);
-            _tcpClient.MessageReceived += TcpClient_MessageReceived;
-            await _tcpClient.ConnectAsync();
-
-            _cancellationTokenSource = new CancellationTokenSource();
-
-            _ = Task.Run(async () =>
-            {
-                while (!_cancellationTokenSource.Token.IsCancellationRequested)
-                {
-                    await _tcpClient.ReceiveAsync(_cancellationTokenSource.Token);
-                }
-            });
-
-            UpdateClientsList();
+            _tcpClient.MessageReceived += _tcpClient_MessageReceived;
+            _tcpClient.ConnectAsync();
+            _tcpClient.ReceiveAsync();
         }
 
+        private void _tcpClient_MessageReceived(object sender, string message)
+        {
+            ChatLog.Items.Add(message);
+        }
 
         private async void SendButton_Click(object sender, RoutedEventArgs e)
         {
             string message = MessageInput.Text.Trim();
+
             if (!string.IsNullOrEmpty(message))
             {
-                await _tcpClient.SendAsync(message);
+                string fullmessage = $"[{DateTime.Now}] {username}: {message}";
+                _tcpClient.SendAsync(fullmessage);
                 MessageInput.Clear();
             }
         }
 
-        private void UpdateClientsList()
-        {
-            List<string> clients = TcpServer.GetConnectedClients();
-            UserList.ItemsSource = clients;
-            UserList.Items.Refresh();
-        }
-
-        private void TcpClient_MessageReceived(object sender, Tuple<string, string> e)
-        {
-            Application.Current.Dispatcher.Invoke(() =>
-            {
-                ChatLog.Items.Add($"{e.Item1}: {e.Item2}\n");
-                UpdateClientsList();
-            });
-        }
-
         private void Window_Closing(object sender, CancelEventArgs e)
         {
-            _cancellationTokenSource.Cancel();
-            _tcpClient.Disconnect();
             MainWindow mainWindow = new MainWindow();
             mainWindow.Show();
         }
 
         private void DiconnectButton_Click(object sender, RoutedEventArgs e)
         {
+            _tcpClient.DisconnectAsync();
+
+            MainWindow mainWindow = new MainWindow();
+            mainWindow.Show();
+
             Close();
         }
     }
