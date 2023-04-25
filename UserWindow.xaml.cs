@@ -19,6 +19,8 @@ namespace PracticalWork6
         {
             InitializeComponent();
 
+            ip = "26.97.200.149"; // !
+
             InitializeAsync(ip, port, username);
         }
 
@@ -29,15 +31,25 @@ namespace PracticalWork6
             await _tcpClient.ConnectAsync();
 
             _cancellationTokenSource = new CancellationTokenSource();
-            await _tcpClient.ReceiveMessagesAsync(_cancellationTokenSource.Token);
+
+            _ = Task.Run(async () =>
+            {
+                while (!_cancellationTokenSource.Token.IsCancellationRequested)
+                {
+                    await _tcpClient.ReceiveAsync(_cancellationTokenSource.Token);
+                }
+            });
+
+            UpdateClientsList();
         }
+
 
         private async void SendButton_Click(object sender, RoutedEventArgs e)
         {
             string message = MessageInput.Text.Trim();
             if (!string.IsNullOrEmpty(message))
             {
-                await _tcpClient.Send(message);
+                await _tcpClient.SendAsync(message);
                 MessageInput.Clear();
             }
         }
@@ -60,6 +72,7 @@ namespace PracticalWork6
 
         private void Window_Closing(object sender, CancelEventArgs e)
         {
+            _cancellationTokenSource.Cancel();
             _tcpClient.Disconnect();
             MainWindow mainWindow = new MainWindow();
             mainWindow.Show();
