@@ -32,7 +32,7 @@ namespace PracticalWork6
             while (!_cancellationTokenSource.Token.IsCancellationRequested)
             {
                 Socket clientSocket = await _serverSocket.AcceptAsync();
-                _clientSockets.TryAdd(clientSocket.LocalEndPoint.ToString(), clientSocket);
+                _clientSockets.TryAdd(Guid.NewGuid().ToString(), clientSocket);
 
                 Task.Factory.StartNew(() => HandleClientAsync(clientSocket), TaskCreationOptions.LongRunning);
             }

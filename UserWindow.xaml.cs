@@ -31,7 +31,7 @@ namespace PracticalWork6
 
         private async Task InitializeClient()
         {
-            _tcpClient = new TcpClient("127.0.0.1", port, username);
+            _tcpClient = new TcpClient(ip, port, username);
             await _tcpClient.ConnectAsync();
             _tcpClient.MessageReceived += TcpClient_MessageReceived;
             _tcpClient.ReceiveAsync();
