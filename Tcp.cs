@@ -66,16 +66,8 @@ namespace PracticalWork6
                     }
                     else
                     {
-                        int endOfMessage = message.IndexOf("/end");
-                        while (endOfMessage > -1)
-                        {
-                            string completeMessage = message.Substring(0, endOfMessage);
-                            Broadcast(completeMessage);
-                            message = message.Substring(endOfMessage + "/end".Length);
-                            endOfMessage = message.IndexOf("/end");
-                        }
+                        Broadcast(message);
                     }
-
                 }
                 catch (SocketException)
                 {
@@ -157,11 +149,7 @@ namespace PracticalWork6
                 }
 
                 var message = Encoding.UTF8.GetString(buffer, 0, receivedBytes);
-                if (message.EndsWith("/end"))
-                {
-                    message = message.Substring(0, message.Length - 4);
-                    MessageReceived?.Invoke(this, message);
-                }
+                MessageReceived?.Invoke(this, message);
             }
         }
 
