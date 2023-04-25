@@ -5,8 +5,68 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:PracticalWork6"
         mc:Ignorable="d"
-        Title="MainWindow" Height="450" Width="800">
+        WindowStartupLocation="CenterScreen"
+        Title="StartWindow" Height="350" Width="500">
     <Grid>
-        
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="Auto"/>
+            <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
+
+        <Label
+            Content="Welcome to the online chat!"
+            Grid.ColumnSpan="2"
+            HorizontalContentAlignment="Center"
+            FontSize="17"/>
+
+        <Label
+            Content="Username:"
+            Margin="5"
+            Grid.Row="1"/>
+        <TextBox
+            Name="UsernameTextBox"
+            Grid.Row="1"
+            Grid.Column="1"
+            Margin="5"
+            VerticalContentAlignment="Center"
+            />
+
+        <Label
+            Content="IP Address:"
+            Grid.Row="2"
+            Margin="5"/>
+        <TextBox
+            Name="IPTextBox"
+            Grid.Row="2"
+            Grid.Column="1"
+            Margin="5"
+            VerticalContentAlignment="Center"/>
+
+        <RadioButton
+            Name="CreateChatRadioButton"
+            Content="Create New Chat"
+            IsChecked="True"
+            Grid.Row="3"
+            Margin="5"/>
+        <RadioButton
+            Name="ConnectChatRadioButton"
+            Content="Connect to Existing Chat"
+            Grid.Row="4"
+            Margin="5"/>
+
+        <Button
+            Name="ConnectButton"
+            Content="Connect"
+            Grid.Row="5"
+            Margin="5"
+            Click="ConnectButton_Click"/>
     </Grid>
 </Window>
