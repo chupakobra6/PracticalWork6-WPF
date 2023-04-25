@@ -13,33 +13,28 @@ namespace PracticalWork6
 {
     public class TcpServer
     {
-        readonly int port;
-        readonly string username;
+        readonly int serverPort;
         Socket _serverSocket;
         CancellationTokenSource _cancellationTokenSource = new CancellationTokenSource();
         ConcurrentDictionary<string, Socket> _clientSockets = new ConcurrentDictionary<string, Socket>();
 
-        public TcpServer(int port, string username)
+        public TcpServer(int serverPort)
         {
-            this.port = port;
-            this.username = username;
-
+            this.serverPort = serverPort;
         }
 
         public async Task StartAsync()
         {
             _serverSocket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
-            _serverSocket.Bind(new IPEndPoint(IPAddress.Any, port));
+            _serverSocket.Bind(new IPEndPoint(IPAddress.Any, serverPort));
             _serverSocket.Listen(100);
-
-            _clientSockets.TryAdd(username, _serverSocket);
 
             while (!_cancellationTokenSource.Token.IsCancellationRequested)
             {
                 Socket clientSocket = await _serverSocket.AcceptAsync();
-                _clientSockets.TryAdd(Guid.NewGuid().ToString(), clientSocket);
+                _clientSockets.TryAdd(clientSocket.LocalEndPoint.ToString(), clientSocket);
 
-                Task.Run(() => HandleClientAsync(clientSocket));
+                Task.Factory.StartNew(() => HandleClientAsync(clientSocket), TaskCreationOptions.LongRunning);
             }
         }
 
@@ -53,7 +48,7 @@ namespace PracticalWork6
                     int bytesReceived = await clientSocket.ReceiveAsync(new ArraySegment<byte>(buffer), SocketFlags.None);
                     if (bytesReceived == 0)
                     {
-                        _cancellationTokenSource.Cancel();
+                        break;
                     }
 
                     byte[] messageBytes = new byte[bytesReceived];
@@ -66,7 +61,7 @@ namespace PracticalWork6
                     }
                     else
                     {
-                        Broadcast(message);
+                        await Task.Factory.StartNew(() => Broadcast(message),TaskCreationOptions.LongRunning);
                     }
                 }
                 catch (SocketException)
@@ -82,7 +77,7 @@ namespace PracticalWork6
         {
             foreach (var clientSocket in _clientSockets.Values)
             {
-                byte[] bytes = Encoding.UTF8.GetBytes($"{message}/end");
+                byte[] bytes = Encoding.UTF8.GetBytes(message);
                 await clientSocket.SendAsync(new ArraySegment<byte>(bytes), SocketFlags.None);
             }
         }
@@ -103,9 +98,9 @@ namespace PracticalWork6
 
     public class TcpClient
     {
-        readonly string _serverIp;
-        readonly int _serverPort;
-        readonly string _username;
+        readonly string serverIp;
+        readonly int serverPort;
+        readonly string username;
         Socket _clientSocket;
         CancellationTokenSource _cancellationTokenSource = new CancellationTokenSource();
 
@@ -114,26 +109,17 @@ namespace PracticalWork6
 
         public TcpClient(string serverIp, int serverPort, string username)
         {
-            _serverIp = serverIp;
-            _serverPort = serverPort;
-            _username = username;
+            this.serverIp = serverIp;
+            this.serverPort = serverPort;
+            this.username = username;
         }
 
         public async Task ConnectAsync()
         {
             _clientSocket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
 
-            var endPoint = new IPEndPoint(IPAddress.Parse(_serverIp), _serverPort);
+            var endPoint = new IPEndPoint(IPAddress.Parse(serverIp), serverPort);
             await _clientSocket.ConnectAsync(endPoint);
-        }
-
-        public async Task SendAsync(string message)
-        {
-            string fullMessage = $"[{DateTime.Now}] {_username}: {message}";
-
-            byte[] buffer = Encoding.UTF8.GetBytes(fullMessage);
-
-            await _clientSocket.SendAsync(new ArraySegment<byte>(buffer), SocketFlags.None);
         }
 
         public async Task ReceiveAsync()
@@ -142,10 +128,9 @@ namespace PracticalWork6
             {
                 var buffer = new byte[1024];
                 var receivedBytes = await _clientSocket.ReceiveAsync(new ArraySegment<byte>(buffer), SocketFlags.None);
-
                 if (receivedBytes == 0)
                 {
-                    _cancellationTokenSource.Cancel();
+                    break;
                 }
 
                 var message = Encoding.UTF8.GetString(buffer, 0, receivedBytes);
@@ -153,6 +138,13 @@ namespace PracticalWork6
             }
         }
 
+        public async Task SendAsync(string message)
+        {
+            string fullMessage = $"[{DateTime.Now}] {username}: {message}";
+
+            byte[] buffer = Encoding.UTF8.GetBytes(fullMessage);
+            await _clientSocket.SendAsync(new ArraySegment<byte>(buffer), SocketFlags.None);
+        }
 
         public async Task DisconnectAsync()
         {

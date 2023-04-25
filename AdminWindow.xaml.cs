@@ -13,6 +13,7 @@ namespace PracticalWork6
         int port;
         string username;
         TcpServer _tcpServer;
+        TcpClient _tcpClient;
 
         List<Message> logMessages = new List<Message>(); // подумать
         public AdminWindow(string username, int port)
@@ -22,15 +23,29 @@ namespace PracticalWork6
             this.port = port;
 
             InitializeServer();
+            InitializeClient();
         }
 
         private async Task InitializeServer()
         {
-            _tcpServer = new TcpServer(port, username);
-
+            _tcpServer = new TcpServer(port);
             _tcpServer.StartAsync();
 
-            LogMessage($"Server started at port: {port}.");
+            LogMessage($"Server started at serverPort: {port}.");
+        }
+
+        private async Task InitializeClient()
+        {
+            _tcpClient = new TcpClient("127.0.0.1", port, username);
+            await _tcpClient.ConnectAsync();
+            _tcpClient.MessageReceived += TcpClient_MessageReceived; ;
+            _tcpClient.ReceiveAsync();
+        }
+
+        private void TcpClient_MessageReceived(object sender, string message)
+        {
+            ChatLog.Items.Add(message);
+            LogMessage(message);
         }
 
         private async void SendButton_Click(object sender, RoutedEventArgs e)
@@ -39,10 +54,7 @@ namespace PracticalWork6
 
             if (!string.IsNullOrEmpty(message))
             {
-                string fullmessage = $"[{DateTime.Now}] {username}: {message}";
-                _tcpServer.Broadcast(fullmessage);
-                ChatLog.Items.Add(fullmessage);
-                LogMessage(fullmessage);
+                await _tcpClient.SendAsync(message);
                 MessageInput.Clear();
             }
         }
@@ -61,10 +73,10 @@ namespace PracticalWork6
         private void DiconnectButton_Click(object sender, RoutedEventArgs e)
         {
             _tcpServer.Stop();
-            
+
             MainWindow mainWindow = new MainWindow();
-            mainWindow.Show(); 
-         
+            mainWindow.Show();
+
             Close();
         }
     }

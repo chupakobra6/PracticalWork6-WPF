@@ -31,13 +31,13 @@ namespace PracticalWork6
 
         private async Task InitializeClient()
         {
-            _tcpClient = new TcpClient(ip, port, username);
-            _tcpClient.MessageReceived += _tcpClient_MessageReceived;
+            _tcpClient = new TcpClient("127.0.0.1", port, username);
             await _tcpClient.ConnectAsync();
+            _tcpClient.MessageReceived += TcpClient_MessageReceived;
             _tcpClient.ReceiveAsync();
         }
 
-        private void _tcpClient_MessageReceived(object sender, string message)
+        private void TcpClient_MessageReceived(object sender, string message)
         {
             ChatLog.Items.Add(message);
         }
@@ -48,8 +48,7 @@ namespace PracticalWork6
 
             if (!string.IsNullOrEmpty(message))
             {
-                string fullmessage = $"[{DateTime.Now}] {username}: {message}";
-                _tcpClient.SendAsync(fullmessage);
+                await _tcpClient.SendAsync(message);
                 MessageInput.Clear();
             }
         }
@@ -60,9 +59,9 @@ namespace PracticalWork6
             mainWindow.Show();
         }
 
-        private void DiconnectButton_Click(object sender, RoutedEventArgs e)
+        private async void DiconnectButton_Click(object sender, RoutedEventArgs e)
         {
-            _tcpClient.DisconnectAsync();
+            await _tcpClient.DisconnectAsync();
 
             MainWindow mainWindow = new MainWindow();
             mainWindow.Show();

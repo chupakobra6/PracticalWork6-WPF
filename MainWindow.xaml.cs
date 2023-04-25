@@ -55,7 +55,7 @@ namespace PracticalWork6
             else if (CreateChatRadioButton.IsChecked == true)
             {
                 // Открываем окно администратора чата
-                AdminWindow adminWindow = new AdminWindow(username, 8888); // Создаём окно админа и передаём в него порт
+                AdminWindow adminWindow = new AdminWindow(username, 8888);
                 adminWindow.Show();
                 Close();
             }

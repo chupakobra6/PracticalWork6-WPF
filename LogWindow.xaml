@@ -5,6 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:PracticalWork6"
         mc:Ignorable="d"
+        WindowStartupLocation="CenterOwner"
         Title="LogWindow" Height="350" Width="500">
     <Grid>
         <Grid.RowDefinitions>
