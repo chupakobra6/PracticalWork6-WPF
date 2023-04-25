@@ -26,7 +26,6 @@ namespace PracticalWork6
             this.port = port;
             this.username = username;
 
-
             InitializeClient();
         }
 
@@ -34,7 +33,7 @@ namespace PracticalWork6
         {
             _tcpClient = new TcpClient(ip, port, username);
             _tcpClient.MessageReceived += _tcpClient_MessageReceived;
-            _tcpClient.ConnectAsync();
+            await _tcpClient.ConnectAsync();
             _tcpClient.ReceiveAsync();
         }
 

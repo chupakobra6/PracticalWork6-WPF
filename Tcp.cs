@@ -66,7 +66,14 @@ namespace PracticalWork6
                     }
                     else
                     {
-                        Broadcast(message);
+                        int endOfMessage = message.IndexOf("/end");
+                        while (endOfMessage > -1)
+                        {
+                            string completeMessage = message.Substring(0, endOfMessage);
+                            Broadcast(completeMessage);
+                            message = message.Substring(endOfMessage + "/end".Length);
+                            endOfMessage = message.IndexOf("/end");
+                        }
                     }
 
                 }
@@ -83,7 +90,8 @@ namespace PracticalWork6
         {
             foreach (var clientSocket in _clientSockets.Values)
             {
-                clientSocket.Send(Encoding.UTF8.GetBytes(message));
+                byte[] bytes = Encoding.UTF8.GetBytes($"{message}/end");
+                await clientSocket.SendAsync(new ArraySegment<byte>(bytes), SocketFlags.None);
             }
         }
 
@@ -138,21 +146,25 @@ namespace PracticalWork6
 
         public async Task ReceiveAsync()
         {
-            byte[] buffer = new byte[1024];
-
             while (!_cancellationTokenSource.Token.IsCancellationRequested)
             {
-                int receivedBytes = await _clientSocket.ReceiveAsync(new ArraySegment<byte>(buffer), SocketFlags.None);
+                var buffer = new byte[1024];
+                var receivedBytes = await _clientSocket.ReceiveAsync(new ArraySegment<byte>(buffer), SocketFlags.None);
 
                 if (receivedBytes == 0)
                 {
                     _cancellationTokenSource.Cancel();
                 }
 
-                string message = Encoding.UTF8.GetString(buffer, 0, receivedBytes);
-                MessageReceived?.Invoke(this, message);
+                var message = Encoding.UTF8.GetString(buffer, 0, receivedBytes);
+                if (message.EndsWith("/end"))
+                {
+                    message = message.Substring(0, message.Length - 4);
+                    MessageReceived?.Invoke(this, message);
+                }
             }
         }
+
 
         public async Task DisconnectAsync()
         {
