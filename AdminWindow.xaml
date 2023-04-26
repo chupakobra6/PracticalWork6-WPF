@@ -77,7 +77,7 @@
 
         <Button
             x:Name="DiconnectButton"
-            Click="DiconnectButton_Click"
+            Click="DisconnectButton_Click"
             Grid.Row="2"
             Grid.Column="1"
             Content="Disconnect"

@@ -14,8 +14,8 @@ namespace PracticalWork6
     /// </summary>
     public partial class UserWindow : Window
     {
-        string ip;
         int port;
+        string ip;
         string username;
         TcpClient _tcpClient;
 
@@ -34,12 +34,24 @@ namespace PracticalWork6
             _tcpClient = new TcpClient(ip, port, username);
             await _tcpClient.ConnectAsync();
             _tcpClient.MessageReceived += TcpClient_MessageReceived;
+            _tcpClient.ClientListReceived += TcpClient_UserListReceived;
+            _tcpClient.DisconnectEvent += TcpClient_DisconnectEvent;
             _tcpClient.ReceiveAsync();
         }
 
         private void TcpClient_MessageReceived(object sender, string message)
         {
             ChatLog.Items.Add(message);
+        }
+
+        private void TcpClient_UserListReceived(object sender, string[] userList)
+        {
+            UserList.ItemsSource = userList;
+        }
+
+        private void TcpClient_DisconnectEvent(object sender)
+        {
+            Close();
         }
 
         private async void SendButton_Click(object sender, RoutedEventArgs e)
@@ -59,14 +71,24 @@ namespace PracticalWork6
             mainWindow.Show();
         }
 
-        private async void DiconnectButton_Click(object sender, RoutedEventArgs e)
+        private void DiconnectButton_Click(object sender, RoutedEventArgs e)
         {
-            await _tcpClient.DisconnectAsync();
+            if (_tcpClient.GetConnection())
+            {
+                _tcpClient.SendAsync("/disconnect");
+            }
+            else
+            {
+                TcpClient_DisconnectEvent(sender);
+            }
+        }
+
+        protected override void OnClosing(CancelEventArgs e)
+        {
+            _tcpClient.Stop();
 
             MainWindow mainWindow = new MainWindow();
             mainWindow.Show();
-
-            Close();
         }
     }
 }

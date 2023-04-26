@@ -14,7 +14,6 @@ namespace PracticalWork6
         public LogWindow(List<Message> logMessages)
         {
             InitializeComponent();
-
             _logMessages = logMessages;
 
             foreach (Message message in _logMessages)

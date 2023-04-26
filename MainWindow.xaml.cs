@@ -1,18 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Net;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Net;
 using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
 
 namespace PracticalWork6
 {
@@ -47,14 +34,12 @@ namespace PracticalWork6
 
                 IPAddress adress = IPAddress.Parse(ip);
 
-                // Открываем окно пользователя чата
                 UserWindow userWindow = new UserWindow(ip, 8888, username);
                 userWindow.Show();
                 Close();
             }
             else if (CreateChatRadioButton.IsChecked == true)
             {
-                // Открываем окно администратора чата
                 AdminWindow adminWindow = new AdminWindow(username, 8888);
                 adminWindow.Show();
                 Close();

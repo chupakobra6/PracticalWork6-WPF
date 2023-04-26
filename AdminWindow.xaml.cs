@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Threading.Tasks;
 using System.Windows;
 
@@ -15,7 +16,8 @@ namespace PracticalWork6
         TcpServer _tcpServer;
         TcpClient _tcpClient;
 
-        List<Message> logMessages = new List<Message>(); // подумать
+        List<Message> logMessages = new List<Message>();
+        
         public AdminWindow(string username, int port)
         {
             InitializeComponent();
@@ -29,16 +31,30 @@ namespace PracticalWork6
         private async Task InitializeServer()
         {
             _tcpServer = new TcpServer(port);
+            _tcpServer.ClientConnected += TcpServer_ClientConnected;
+            _tcpServer.ClientDisconnected += TcpServer_ClientDisconnected;
             _tcpServer.StartAsync();
 
             LogMessage($"Server started at serverPort: {port}.");
+        }
+
+        private void TcpServer_ClientConnected(object sender, string clientname)
+        {
+            LogMessage($"Client [{clientname}] connected.");
+        }
+
+        private void TcpServer_ClientDisconnected(object sender, string clientname)
+        {
+            LogMessage($"Client [{clientname}] disconnected.");
         }
 
         private async Task InitializeClient()
         {
             _tcpClient = new TcpClient("127.0.0.1", port, username);
             await _tcpClient.ConnectAsync();
-            _tcpClient.MessageReceived += TcpClient_MessageReceived; ;
+            _tcpClient.MessageReceived += TcpClient_MessageReceived;
+            _tcpClient.ClientListReceived += TcpClient_ClientListReceived;
+            _tcpClient.DisconnectEvent += TcpClient_DisconnectEvent;
             _tcpClient.ReceiveAsync();
         }
 
@@ -46,6 +62,16 @@ namespace PracticalWork6
         {
             ChatLog.Items.Add(message);
             LogMessage(message);
+        }
+
+        private void TcpClient_ClientListReceived(object sender, string[] clientList)
+        {
+            UserList.ItemsSource = clientList;
+        }
+
+        private void TcpClient_DisconnectEvent(object sender)
+        {
+            Close();
         }
 
         private async void SendButton_Click(object sender, RoutedEventArgs e)
@@ -70,14 +96,17 @@ namespace PracticalWork6
             logWindow.ShowDialog();
         }
 
-        private void DiconnectButton_Click(object sender, RoutedEventArgs e)
+        private void DisconnectButton_Click(object sender, RoutedEventArgs e)
+        {
+            TcpClient_DisconnectEvent(null);
+        }
+
+        protected override void OnClosing(CancelEventArgs e)
         {
             _tcpServer.Stop();
 
             MainWindow mainWindow = new MainWindow();
             mainWindow.Show();
-
-            Close();
         }
     }
 }
